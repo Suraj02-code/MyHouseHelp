@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load currency_filters %}
+{% block title %}Find Services - Home Service Marketplace{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-title">
+            <h2>🔍 Find Services</h2>
+        </div>
+        
+        <form method="get" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 10px; align-items: end;">
+            <div class="form-group">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" value="{{ search_query }}" placeholder="e.g., cleaning, plumbing...">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-control">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.name }}" {% if selected_category == cat.name %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Min Price</label>
+                <input type="number" name="min_price" class="form-control" value="{{ min_price }}" min="0" step="0.01">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Max Price</label>
+                <input type="number" name="max_price" class="form-control" value="{{ max_price }}" min="0" step="0.01">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Sort By</label>
+                <select name="sort" class="form-control">
+                    <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Newest First</option>
+                    <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                    <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest Rated</option>
+                    <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+                </select>
+            </div>
+            
+            <div style="grid-column: 1 / -1; text-align: right; margin-top: 10px;">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                <a href="{% url 'services:list' %}" class="btn btn-outline-primary">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    {% if page_obj %}
+        <div class="card-grid">
+            {% for service in page_obj %}
+            <div class="service-card">
+                {% if service.service_image %}
+                    <img src="{{ service.service_image.url }}" alt="{{ service.title }}" class="service-image">
+                {% else %}
+                    <img src="https://via.placeholder.com/400x200?text={{ service.title|urlencode }}" alt="{{ service.title }}" class="service-image">
+                {% endif %}
+                
+                <div class="service-content">
+                    <h3 class="service-title">{{ service.title }}</h3>
+                    <div class="service-price">{{ service.base_price|inr }}</div>
+                    <div class="service-rating">
+                        <span class="star">★</span>
+                        <span>{{ service.provider.provider_profile.average_rating|default:0 }}/5</span>
+                        <small>({{ service.provider.provider_profile.total_reviews|default:0 }} reviews)</small>
+                    </div>
+                    <div style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                        <span>{{ service.category.name }}</span> •
+                        <span>{{ service.get_price_unit_display }}</span>
+                    </div>
+                    <a href="{% url 'services:detail' service.id %}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="card" style="grid-column: 1 / -1; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 15px;">🧐</div>
+                <h3>No services found</h3>
+                <p>Try different filters or browse all categories.</p>
+                <a href="{% url 'services:list' %}" class="btn btn-outline-primary">Reset Filters</a>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div style="text-align: center; margin-top: 20px;">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&category={{ selected_category }}&min_price={{ min_price }}&max_price={{ max_price }}&sort={{ sort_by }}" class="btn btn-outline-primary">Previous</a>
+            {% endif %}
+            <span style="margin: 0 10px;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&category={{ selected_category }}&min_price={{ min_price }}&max_price={{ max_price }}&sort={{ sort_by }}" class="btn btn-outline-primary">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

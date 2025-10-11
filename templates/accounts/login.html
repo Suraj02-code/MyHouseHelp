@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In - Home Service Marketplace{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 450px; margin-top: 100px;">
+    <div class="card">
+        <div class="card-title">
+            <h2 style="text-align: center; margin-bottom: 30px;">🔑 Sign In</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">
+                Welcome back! Please sign in to your account.
+            </p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}" class="form-label">Username or Email</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="text-danger">{{ form.username.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <div class="text-danger">{{ form.password.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary" style="padding: 12px 40px; font-size: 16px; width: 100%;">
+                    Sign In
+                </button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                <p>Don't have an account?</p>
+                <div style="margin-top: 15px;">
+                    <a href="{% url 'accounts:register' %}?role=customer" class="btn btn-outline-primary" style="margin: 5px;">
+                        Sign Up as Customer
+                    </a>
+                    <a href="{% url 'accounts:register' %}?role=provider" class="btn btn-success" style="margin: 5px;">
+                        Join as Provider
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Demo Credentials -->
+    <div class="card" style="margin-top: 30px; background: #f8f9fa; border: 1px solid #e9ecef;">
+        <h5 style="margin-bottom: 15px;">🔧 Demo Credentials</h5>
+        <div style="font-size: 14px; color: #666;">
+            <p><strong>Admin:</strong> admin / admin123</p>
+            <p><strong>Customer:</strong> demo_customer / demo123</p>
+            <p><strong>Provider:</strong> demo_provider / demo123</p>
+        </div>
+        <small style="color: #999;">Note: Create these accounts through the admin panel or registration</small>
+    </div>
+</div>
+
+<style>
+    .text-danger {
+        color: #dc3545 !important;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}

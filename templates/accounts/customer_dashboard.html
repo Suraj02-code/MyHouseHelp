@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Dashboard - Home Service Marketplace{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>👋 Welcome back, {{ user.first_name|default:user.username }}!</h1>
+        <p>Manage your bookings and find the perfect services for your home.</p>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_bookings }}</div>
+            <div class="stat-label">Total Bookings</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ completed_bookings }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ pending_bookings }}</div>
+            <div class="stat-label">Active Bookings</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ reviews_given }}</div>
+            <div class="stat-label">Reviews Given</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ customer_profile.loyalty_points }}</div>
+            <div class="stat-label">Loyalty Points</div>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-top: 30px;">
+        <!-- Recent Bookings -->
+        <div class="card">
+            <div class="card-title">
+                <h3>📅 Recent Bookings</h3>
+            </div>
+            
+            {% if recent_bookings %}
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Provider</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in recent_bookings %}
+                            <tr>
+                                <td>
+                                    <strong>{{ booking.service.title }}</strong><br>
+                                    <small>{{ booking.service.category.name }}</small>
+                                </td>
+                                <td>{{ booking.provider.get_full_name }}</td>
+                                <td>{{ booking.booking_date|date:"M d, Y" }}<br>{{ booking.booking_time }}</td>
+                                <td>
+                                    <span class="badge badge-{% if booking.status == 'completed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'confirmed' %}info{% else %}danger{% endif %}">
+                                        {{ booking.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'bookings:detail' booking.id %}" class="btn btn-outline-primary" style="font-size: 12px; padding: 5px 10px;">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="{% url 'bookings:my_bookings' %}" class="btn btn-primary">View All Bookings</a>
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">📅</div>
+                    <h4>No bookings yet</h4>
+                    <p>Ready to book your first service?</p>
+                    <a href="{% url 'services:list' %}" class="btn btn-primary" style="margin-top: 15px;">
+                        Browse Services
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Quick Actions -->
+        <div>
+            <div class="card">
+                <div class="card-title">
+                    <h3>🚀 Quick Actions</h3>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <a href="{% url 'services:list' %}" class="btn btn-primary">
+                        🔍 Browse Services
+                    </a>
+                    <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-primary">
+                        📋 My Bookings
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-primary">
+                        ⚙️ Edit Profile
+                    </a>
+                    <a href="#" onclick="alert('Payment methods coming soon!')" class="btn btn-outline-primary">
+                        💳 Payment Methods
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Profile Status -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-title">
+                    <h3>👤 Profile Status</h3>
+                </div>
+                
+                <div style="font-size: 14px;">
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: {% if user.email %}#28a745{% else %}#dc3545{% endif %};">
+                            {% if user.email %}✅{% else %}❌{% endif %} Email Verified
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: {% if user.phone_number %}#28a745{% else %}#dc3545{% endif %};">
+                            {% if user.phone_number %}✅{% else %}❌{% endif %} Phone Added
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: {% if user.address %}#28a745{% else %}#dc3545{% endif %};">
+                            {% if user.address %}✅{% else %}❌{% endif %} Address Added
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <span style="color: {% if user.profile_picture %}#28a745{% else %}#dc3545{% endif %};">
+                            {% if user.profile_picture %}✅{% else %}❌{% endif %} Profile Picture
+                        </span>
+                    </div>
+                    
+                    {% if not user.email or not user.phone_number or not user.address %}
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-warning" style="font-size: 12px; width: 100%;">
+                            Complete Profile
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

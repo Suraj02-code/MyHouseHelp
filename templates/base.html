@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Home Service Marketplace{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{% url 'home' %}" class="navbar-brand">🏠 MyHouseHelp</a>
+            
+            <ul class="navbar-nav">
+                <li><a href="{% url 'services:list' %}" class="nav-link">Services</a></li>
+                
+                {% if user.is_authenticated %}
+                    {% if user.role == 'customer' %}
+                        <li><a href="{% url 'accounts:customer_dashboard' %}" class="nav-link">Dashboard</a></li>
+                        <li><a href="{% url 'bookings:my_bookings' %}" class="nav-link">My Bookings</a></li>
+                    {% elif user.role == 'provider' %}
+                        <li><a href="{% url 'accounts:provider_dashboard' %}" class="nav-link">Dashboard</a></li>
+                        <li><a href="{% url 'services:my_services' %}" class="nav-link">My Services</a></li>
+                        <li><a href="{% url 'bookings:provider_bookings' %}" class="nav-link">Bookings</a></li>
+                    {% elif user.role == 'admin' %}
+                        <li><a href="/admin/" class="nav-link">Admin Panel</a></li>
+                    {% endif %}
+                    
+                    <li><a href="{% url 'accounts:profile' %}" class="nav-link">Profile</a></li>
+                    <li><a href="{% url 'accounts:logout' %}" class="nav-link">Logout ({{ user.username }})</a></li>
+                {% else %}
+                    <li><a href="{% url 'accounts:login' %}" class="nav-link">Login</a></li>
+                    <li><a href="{% url 'accounts:register' %}" class="btn btn-success">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container">
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About MyHouseHelp</h4>
+                <p>Connecting customers with verified service providers for all your household needs.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Services</h4>
+                <a href="{% url 'services:category' 'cleaning' %}">Cleaning</a>
+                <a href="{% url 'services:category' 'plumbing' %}">Plumbing</a>
+                <a href="{% url 'services:category' 'electrical' %}">Electrical</a>
+                <a href="{% url 'services:category' 'maintenance' %}">Maintenance</a>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Support</h4>
+                <a href="#" onclick="alert('Contact: support@homeservice.com')">Contact Us</a>
+                <a href="#" onclick="alert('Help documentation coming soon!')">Help Center</a>
+                <a href="#" onclick="alert('FAQ section coming soon!')">FAQ</a>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Account</h4>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:profile' %}">My Profile</a>
+                    {% if user.role == 'customer' %}
+                        <a href="{% url 'bookings:my_bookings' %}">My Bookings</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'accounts:login' %}">Login</a>
+                    <a href="{% url 'accounts:register' %}">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="text-align: center; padding-top: 20px; border-top: 1px solid #495057; margin-top: 30px;">
+            <p>&copy; 2025 MyHouseHelp Marketplace. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+
+

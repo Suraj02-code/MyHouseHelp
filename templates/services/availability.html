@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Service Availability - Home Service Marketplace{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="dashboard-header">
+        <h1>🕐 Service Availability</h1>
+        <p>Set your working hours to let customers know when you're available.</p>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-top: 30px;">
+        <!-- Current Availability -->
+        <div class="card">
+            <div class="card-title">
+                <h3>📅 Current Availability</h3>
+            </div>
+            
+            {% if availability_slots %}
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slot in availability_slots %}
+                            <tr>
+                                <td><strong>{{ slot.get_day_of_week_display }}</strong></td>
+                                <td>{{ slot.start_time|time:"g:i A" }}</td>
+                                <td>{{ slot.end_time|time:"g:i A" }}</td>
+                                <td>
+                                    <span class="badge badge-{% if slot.is_available %}success{% else %}danger{% endif %}">
+                                        {% if slot.is_available %}Available{% else %}Unavailable{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="#" onclick="alert('Edit functionality coming soon!')" class="btn btn-outline-primary" style="font-size: 12px; padding: 5px 10px;">
+                                        Edit
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">📅</div>
+                    <h4>No availability set</h4>
+                    <p>Add your working hours to start receiving bookings!</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Add Availability -->
+        <div class="card">
+            <div class="card-title">
+                <h3>➕ Add Availability</h3>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="{{ form.day_of_week.id_for_label }}" class="form-label">Day of Week *</label>
+                    {{ form.day_of_week }}
+                    {% if form.day_of_week.errors %}
+                        <div class="text-danger">{{ form.day_of_week.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.start_time.id_for_label }}" class="form-label">Start Time *</label>
+                    {{ form.start_time }}
+                    {% if form.start_time.errors %}
+                        <div class="text-danger">{{ form.start_time.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.end_time.id_for_label }}" class="form-label">End Time *</label>
+                    {{ form.end_time }}
+                    {% if form.end_time.errors %}
+                        <div class="text-danger">{{ form.end_time.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        {{ form.is_available }}
+                        <label for="{{ form.is_available.id_for_label }}" class="form-check-label">
+                            Available
+                        </label>
+                    </div>
+                    {% if form.is_available.errors %}
+                        <div class="text-danger">{{ form.is_available.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        Add Availability
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Tips Section -->
+    <div class="card" style="margin-top: 30px;">
+        <div class="card-title">
+            <h3>💡 Availability Tips</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <div>
+                <h4>⏰ Set Realistic Hours</h4>
+                <p>Only set hours when you're actually available to work</p>
+            </div>
+            <div>
+                <h4>📅 Be Consistent</h4>
+                <p>Regular availability helps build customer trust</p>
+            </div>
+            <div>
+                <h4>🔄 Update Regularly</h4>
+                <p>Keep your availability current to avoid conflicts</p>
+            </div>
+            <div>
+                <h4>📱 Quick Response</h4>
+                <p>Respond to booking requests within 24 hours</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-danger {
+        color: #dc3545 !important;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .form-check-input {
+        margin: 0;
+    }
+    .form-check-label {
+        margin: 0;
+        font-weight: normal;
+    }
+</style>
+{% endblock %}

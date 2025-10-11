@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Home Service Marketplace{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin-top: 30px;">
+    <div class="card">
+        <div class="card-title">
+            <h2>{{ title }}</h2>
+            <p>Create a compelling service listing to attract customers</p>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.category.id_for_label }}" class="form-label">Service Category *</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <div class="text-danger">{{ form.category.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.price_unit.id_for_label }}" class="form-label">Price Unit *</label>
+                    {{ form.price_unit }}
+                    {% if form.price_unit.errors %}
+                        <div class="text-danger">{{ form.price_unit.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}" class="form-label">Service Title *</label>
+                {{ form.title }}
+                {% if form.title.help_text %}
+                    <small class="text-muted">{{ form.title.help_text }}</small>
+                {% endif %}
+                {% if form.title.errors %}
+                    <div class="text-danger">{{ form.title.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}" class="form-label">Service Description *</label>
+                {{ form.description }}
+                {% if form.description.help_text %}
+                    <small class="text-muted">{{ form.description.help_text }}</small>
+                {% endif %}
+                {% if form.description.errors %}
+                    <div class="text-danger">{{ form.description.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.base_price.id_for_label }}" class="form-label">Base Price (₹) *</label>
+                    {{ form.base_price }}
+                    {% if form.base_price.help_text %}
+                        <small class="text-muted">{{ form.base_price.help_text }}</small>
+                    {% endif %}
+                    {% if form.base_price.errors %}
+                        <div class="text-danger">{{ form.base_price.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.duration_hours.id_for_label }}" class="form-label">Duration (Hours) *</label>
+                    {{ form.duration_hours }}
+                    {% if form.duration_hours.help_text %}
+                        <small class="text-muted">{{ form.duration_hours.help_text }}</small>
+                    {% endif %}
+                    {% if form.duration_hours.errors %}
+                        <div class="text-danger">{{ form.duration_hours.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.service_image.id_for_label }}" class="form-label">Service Image</label>
+                {{ form.service_image }}
+                {% if form.service_image.errors %}
+                    <div class="text-danger">{{ form.service_image.errors.0 }}</div>
+                {% endif %}
+                <small class="text-muted">Upload a high-quality image that represents your service (optional but recommended)</small>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <div class="form-check">
+                        {{ form.requires_quote }}
+                        <label for="{{ form.requires_quote.id_for_label }}" class="form-check-label">
+                            Requires Custom Quote
+                        </label>
+                        {% if form.requires_quote.help_text %}
+                            <small class="text-muted d-block">{{ form.requires_quote.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    {% if form.requires_quote.errors %}
+                        <div class="text-danger">{{ form.requires_quote.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        {{ form.is_active }}
+                        <label for="{{ form.is_active.id_for_label }}" class="form-check-label">
+                            Service is Active
+                        </label>
+                        <small class="text-muted d-block">Uncheck to temporarily hide this service</small>
+                    </div>
+                    {% if form.is_active.errors %}
+                        <div class="text-danger">{{ form.is_active.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary" style="padding: 12px 40px; font-size: 16px;">
+                    {% if title == 'Create New Service' %}Create Service{% else %}Update Service{% endif %}
+                </button>
+                <a href="{% url 'services:my_services' %}" class="btn btn-outline-secondary" style="margin-left: 15px;">Cancel</a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Tips Section -->
+    <div class="card" style="margin-top: 30px;">
+        <div class="card-title">
+            <h3>💡 Service Creation Tips</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <div>
+                <h4>📝 Clear Title</h4>
+                <p>Use descriptive titles like "Professional House Cleaning" instead of just "Cleaning"</p>
+            </div>
+            <div>
+                <h4>💰 Competitive Pricing</h4>
+                <p>Research similar services in your area to set competitive prices</p>
+            </div>
+            <div>
+                <h4>📸 Quality Images</h4>
+                <p>High-quality photos can increase bookings by up to 3x</p>
+            </div>
+            <div>
+                <h4>📋 Detailed Description</h4>
+                <p>Include what's included, what's not, and any special requirements</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-danger {
+        color: #dc3545 !important;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+    .text-muted {
+        color: #6c757d !important;
+        font-size: 13px;
+        margin-top: 3px;
+        display: block;
+    }
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .form-check-input {
+        margin: 0;
+    }
+    .form-check-label {
+        margin: 0;
+        font-weight: normal;
+    }
+</style>
+{% endblock %}

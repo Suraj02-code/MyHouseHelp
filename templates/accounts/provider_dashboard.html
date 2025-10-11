@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load currency_filters %}
+
+{% block title %}Provider Dashboard - Home Service Marketplace{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>👋 Welcome back, {{ user.first_name|default:user.username }}!</h1>
+        <p>Manage your services, bookings, and grow your business with us.</p>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ services_offered }}</div>
+            <div class="stat-label">Services Offered</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ total_bookings }}</div>
+            <div class="stat-label">Total Bookings</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ completed_jobs }}</div>
+            <div class="stat-label">Completed Jobs</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ pending_bookings }}</div>
+            <div class="stat-label">Pending Bookings</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ avg_rating }}</div>
+            <div class="stat-label">Average Rating</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ total_earnings|inr }}</div>
+            <div class="stat-label">Total Earnings</div>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-top: 30px;">
+        <!-- Recent Bookings -->
+        <div class="card">
+            <div class="card-title">
+                <h3>📅 Recent Bookings</h3>
+            </div>
+            
+            {% if recent_bookings %}
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Price</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in recent_bookings %}
+                            <tr>
+                                <td>
+                                    <strong>{{ booking.service.title }}</strong><br>
+                                    <small>{{ booking.service.category.name }}</small>
+                                </td>
+                                <td>{{ booking.customer.get_full_name }}</td>
+                                <td>{{ booking.booking_date|date:"M d, Y" }}<br>{{ booking.booking_time }}</td>
+                                <td>
+                                    <span class="badge badge-{% if booking.status == 'completed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'confirmed' %}info{% else %}danger{% endif %}">
+                                        {{ booking.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ booking.quoted_price|inr }}</td>
+                                <td>
+                                    <a href="#" onclick="alert('Booking details coming soon!')" class="btn btn-outline-primary" style="font-size: 12px; padding: 5px 10px;">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="#" onclick="alert('All bookings view coming soon!')" class="btn btn-primary">View All Bookings</a>
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">📅</div>
+                    <h4>No bookings yet</h4>
+                    <p>Start by creating your service listings to get bookings!</p>
+                    <a href="{% url 'services:my_services' %}" class="btn btn-primary" style="margin-top: 15px;">
+                        Create Service
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Quick Actions -->
+        <div>
+            <div class="card">
+                <div class="card-title">
+                    <h3>🚀 Quick Actions</h3>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <a href="{% url 'services:my_services' %}" class="btn btn-primary">
+                        ⚙️ My Services
+                    </a>
+                    <a href="#" onclick="alert('Bookings management coming soon!')" class="btn btn-outline-primary">
+                        📋 Manage Bookings
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-primary">
+                        👤 Edit Profile
+                    </a>
+                    <a href="#" onclick="alert('Analytics coming soon!')" class="btn btn-outline-primary">
+                        📊 View Analytics
+                    </a>
+                    <a href="#" onclick="alert('Payment settings coming soon!')" class="btn btn-outline-primary">
+                        💰 Payment Settings
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Business Profile Status -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-title">
+                    <h3>🏢 Business Profile</h3>
+                </div>
+                
+                <div style="font-size: 14px;">
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: {% if provider_profile.business_name %}#28a745{% else %}#dc3545{% endif %};">
+                            {% if provider_profile.business_name %}✅{% else %}❌{% endif %} Business Name
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: {% if provider_profile.description %}#28a745{% else %}#dc3545{% endif %};">
+                            {% if provider_profile.description %}✅{% else %}❌{% endif %} Description
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: {% if provider_profile.verification_status == 'verified' %}#28a745{% elif provider_profile.verification_status == 'pending' %}#ffc107{% else %}#dc3545{% endif %};">
+                            {% if provider_profile.verification_status == 'verified' %}✅ Verified
+                            {% elif provider_profile.verification_status == 'pending' %}⏳ Verification Pending
+                            {% else %}❌ Not Verified{% endif %}
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span style="color: {% if provider_profile.is_available %}#28a745{% else %}#dc3545{% endif %};">
+                            {% if provider_profile.is_available %}✅ Available for Work{% else %}❌ Unavailable{% endif %}
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <span style="color: {% if services_offered > 0 %}#28a745{% else %}#dc3545{% endif %};">
+                            {% if services_offered > 0 %}✅{% else %}❌{% endif %} Services Listed ({{ services_offered }})
+                        </span>
+                    </div>
+                    
+                    {% if not provider_profile.business_name or not provider_profile.description or services_offered == 0 %}
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-warning" style="font-size: 12px; width: 100%; margin-bottom: 10px;">
+                            Complete Profile
+                        </a>
+                    {% endif %}
+                    
+                    {% if services_offered == 0 %}
+                        <a href="{% url 'services:my_services' %}" class="btn btn-success" style="font-size: 12px; width: 100%;">
+                            Add Services
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Rating & Reviews -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-title">
+                    <h3>⭐ Rating & Reviews</h3>
+                </div>
+                
+                <div style="text-align: center; font-size: 14px;">
+                    {% if total_reviews > 0 %}
+                        <div style="font-size: 2rem; color: #ffc107; margin-bottom: 10px;">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= avg_rating %}⭐{% else %}☆{% endif %}
+                            {% endfor %}
+                        </div>
+                        <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">
+                            {{ avg_rating }}/5.0
+                        </div>
+                        <div style="color: #666;">
+                            Based on {{ total_reviews }} review{{ total_reviews|pluralize }}
+                        </div>
+                    {% else %}
+                        <div style="font-size: 2rem; color: #ddd; margin-bottom: 10px;">☆☆☆☆☆</div>
+                        <div style="color: #666;">No reviews yet</div>
+                        <div style="font-size: 12px; margin-top: 10px;">
+                            Complete jobs to get reviews!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
