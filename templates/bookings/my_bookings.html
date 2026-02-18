@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings - Home Service Marketplace{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📋 My Bookings</h2>
+        <div>
+            <a href="{% url 'accounts:customer_dashboard' %}" class="btn btn-outline-secondary">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ total_bookings }}</h5>
+                    <p class="card-text">Total Bookings</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">{{ completed_bookings }}</h5>
+                    <p class="card-text">Completed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">{{ pending_bookings }}</h5>
+                    <p class="card-text">Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">{{ cancelled_bookings }}</h5>
+                    <p class="card-text">Cancelled</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters and Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Filter by Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for status_value, status_label in status_choices %}
+                        <option value="{{ status_value }}" 
+                                {% if status_filter == status_value %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" 
+                           name="search" 
+                           id="search" 
+                           class="form-control" 
+                           placeholder="Search by service title, provider, or category..."
+                           value="{{ search_query }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        🔍 Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Bookings List -->
+    <div class="card">
+        <div class="card-body">
+            {% if bookings %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Provider</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                            <tr>
+                                <td>
+                                    <strong>{{ booking.service.title }}</strong><br>
+                                    <small class="text-muted">{{ booking.service.category.name }}</small>
+                                </td>
+                                <td>
+                                    <div>{{ booking.provider.get_full_name }}</div>
+                                    <small class="text-muted">⭐ {{ booking.provider.provider_profile.average_rating|default:"N/A" }}/5</small>
+                                </td>
+                                <td>
+                                    {{ booking.booking_date|date:"M d, Y" }}<br>
+                                    <small>{{ booking.booking_time }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge badge-{% if booking.status == 'completed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'confirmed' %}info{% elif booking.status == 'cancelled' %}danger{% elif booking.status == 'in_progress' %}primary{% else %}secondary{% endif %}">
+                                        {{ booking.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if booking.final_price %}
+                                        ${{ booking.final_price }}
+                                    {% else %}
+                                        ${{ booking.quoted_price }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'bookings:detail' booking.id %}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            👁 View
+                                        </a>
+                                        
+                                        {% if booking.status in 'pending','confirmed' %}
+                                            <form method="POST" action="{% url 'bookings:cancel' booking.id %}" 
+                                                  onsubmit="return confirm('Are you sure you want to cancel this booking?')">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    ❌ Cancel
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        
+                                        {% if booking.status == 'completed' %}
+                                            <a href="{% url 'reviews:create' booking.id %}" 
+                                               class="btn btn-outline-success btn-sm">
+                                                ⭐ Review
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Bookings pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                        ← Previous
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                    <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                        Next →
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">📋</div>
+                    <h4>No bookings found</h4>
+                    <p class="text-muted">
+                        {% if search_query or status_filter %}
+                            Try adjusting your search or filter criteria.
+                        {% else %}
+                            Ready to book your first service?
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'services:list' %}" class="btn btn-primary">
+                        🔍 Browse Services
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.badge-success { background-color: #28a745; }
+.badge-warning { background-color: #ffc107; color: #212529; }
+.badge-info { background-color: #17a2b8; }
+.badge-danger { background-color: #dc3545; }
+.badge-primary { background-color: #007bff; }
+.badge-secondary { background-color: #6c757d; }
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.pagination .page-link {
+    color: #007bff;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+</style>
+{% endblock %}

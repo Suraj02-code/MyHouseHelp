@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load currency_filters %}
+{% block title %}Personalized Recommendations - Home Service Marketplace{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-title">
+            <h2>🤖 Personalized Recommendations</h2>
+            <p style="color: #666; margin: 10px 0;">
+                Discover top-rated providers and services tailored just for you based on your preferences and booking history.
+            </p>
+        </div>
+    </div>
+
+    <!-- Provider Recommendations -->
+    {% if recommendations %}
+    <div class="card" style="margin-top: 20px;">
+        <div class="card-title">
+            <h3>⭐ Recommended Providers</h3>
+            <small style="color: #666;">Providers we think you'll love based on your preferences</small>
+        </div>
+        
+        <div class="card-grid">
+            {% for rec in recommendations %}
+            <div class="provider-card" style="border: 2px solid #007bff; background: #f8f9ff;">
+                <div style="padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                        <div>
+                            <h4 style="margin: 0; color: #007bff;">{{ rec.provider.username }}</h4>
+                            <p style="margin: 5px 0; color: #666; font-size: 14px;">{{ rec.provider_profile.business_name }}</p>
+                        </div>
+                        <div style="background: #007bff; color: white; padding: 8px 12px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+                            {{ rec.final_score|floatformat:2 }} Match
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <div class="service-rating" style="margin-bottom: 8px;">
+                            <span class="star">★</span>
+                            <span>{{ rec.provider_profile.average_rating|default:0 }}/5</span>
+                            <small>({{ rec.provider_profile.total_reviews|default:0 }} reviews)</small>
+                        </div>
+                        <div style="font-size: 14px; color: #666;">
+                            <div>🎯 {{ rec.provider_profile.years_of_experience }} years experience</div>
+                            <div>✅ {{ rec.provider_profile.completed_jobs }} jobs completed</div>
+                            <div>📍 Available in your area</div>
+                        </div>
+                    </div>
+                    
+                    {% if rec.services %}
+                    <div style="margin-bottom: 15px;">
+                        <strong style="font-size: 14px; color: #333;">Services Offered:</strong>
+                        <div style="margin-top: 5px;">
+                            {% for service in rec.services|slice:":4" %}
+                                <span style="display: inline-block; background: #e9ecef; padding: 4px 8px; margin: 2px; border-radius: 12px; font-size: 12px;">
+                                    {{ service.title }}
+                                </span>
+                            {% endfor %}
+                            {% with remaining_count=rec.services|length|add:"-4" %}
+                            {% if rec.services|length > 4 %}
+                                <span style="display: inline-block; background: #007bff; color: white; padding: 4px 8px; margin: 2px; border-radius: 12px; font-size: 12px;">
+                                    +{{ remaining_count }} more
+                                </span>
+                            {% endif %}
+                        {% endwith %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        {% if rec.services %}
+                        <a href="{% url 'services:detail' rec.services.0.id %}" class="btn btn-primary">View Services</a>
+                        {% endif %}
+                        <button class="btn btn-outline-secondary" onclick="showRecommendationDetails({{ forloop.counter0 }})">
+                            📊 Why Recommended?
+                        </button>
+                    </div>
+                    
+                    <div id="rec-details-{{ forloop.counter0 }}" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                        <h6 style="margin: 0 0 10px 0; color: #007bff;">📈 Recommendation Score Breakdown</h6>
+                        <div style="font-size: 13px; line-height: 1.6;">
+                            <div>⭐ <strong>Rating:</strong> {{ rec.score_breakdown.rating|floatformat:3 }} (80% weight - ABSOLUTE PRIORITY)</div>
+                            <div>👥 <strong>Similar Users:</strong> {{ rec.score_breakdown.collaborative|floatformat:3 }} (10% weight)</div>
+                            <div>🎯 <strong>Compatibility:</strong> {{ rec.score_breakdown.content_based|floatformat:3 }} (5% weight)</div>
+                            <div>🔥 <strong>Popularity:</strong> {{ rec.score_breakdown.popularity|floatformat:3 }} (3% weight)</div>
+                            <div>📅 <strong>Availability:</strong> {{ rec.score_breakdown.availability|floatformat:3 }} (2% weight)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Service Recommendations -->
+    {% if service_recommendations %}
+    <div class="card" style="margin-top: 20px;">
+        <div class="card-title">
+            <h3>🔧 Recommended Services</h3>
+            <small style="color: #666;">Services you might be interested in</small>
+        </div>
+        
+        <div class="card-grid">
+            {% for rec in service_recommendations %}
+            <div class="service-card" style="border: 2px solid #28a745;">
+                {% if rec.service.service_image %}
+                    <img src="{{ rec.service.service_image.url }}" alt="{{ rec.service.title }}" class="service-image">
+                {% else %}
+                    <img src="https://via.placeholder.com/400x200?text={{ rec.service.title|urlencode }}" alt="{{ rec.service.title }}" class="service-image">
+                {% endif %}
+                
+                <div class="service-content">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <h3 class="service-title">{{ rec.service.title }}</h3>
+                        <div style="background: #28a745; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                            {{ rec.score|floatformat:2 }} Match
+                        </div>
+                    </div>
+                    
+                    <div class="service-price">{{ rec.service.base_price|inr }}</div>
+                    <div class="service-rating">
+                        <span class="star">★</span>
+                        <span>{{ rec.provider.provider_profile.average_rating|default:0 }}/5</span>
+                        <small>({{ rec.provider.provider_profile.total_reviews|default:0 }} reviews)</small>
+                    </div>
+                    <div style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                        <span>{{ rec.category.name }}</span> •
+                        <span>{{ rec.service.get_price_unit_display }}</span> •
+                        <span>by {{ rec.provider.username }}</span>
+                    </div>
+                    <a href="{% url 'services:detail' rec.service.id %}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Categories for Browsing -->
+    {% if categories %}
+    <div class="card" style="margin-top: 20px;">
+        <div class="card-title">
+            <h3>📂 Browse by Category</h3>
+            <small style="color: #666;">Explore services in different categories</small>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            {% for category in categories %}
+            <a href="{% url 'services:category' category.name %}" style="display: block; padding: 20px; background: #f8f9fa; border-radius: 8px; text-decoration: none; color: #333; border: 1px solid #dee2e6; transition: all 0.3s ease;" 
+               onmouseover="this.style.background='#007bff'; this.style.color='white'; this.style.borderColor='#007bff';"
+               onmouseout="this.style.background='#f8f9fa'; this.style.color='#333'; this.style.borderColor='#dee2e6';">
+                <div style="font-weight: bold; margin-bottom: 5px;">{{ category.name }}</div>
+                <div style="font-size: 14px; color: #666;">{{ category.description|truncatewords:10 }}</div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- No Recommendations Message -->
+    {% if not recommendations and not service_recommendations %}
+    <div class="card" style="margin-top: 20px; text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 20px;">🤖</div>
+        <h3>Building Your Recommendations</h3>
+        <p style="color: #666; margin-bottom: 20px;">
+            We're still learning about your preferences! Start by browsing services and making bookings to get personalized recommendations.
+        </p>
+        <a href="{% url 'services:list' %}" class="btn btn-primary">Browse All Services</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function showRecommendationDetails(index) {
+    const details = document.getElementById(`rec-details-${index}`);
+    if (details.style.display === 'none') {
+        details.style.display = 'block';
+    } else {
+        details.style.display = 'none';
+    }
+}
+
+// Track recommendation interactions for learning
+document.addEventListener('DOMContentLoaded', function() {
+    const recommendationCards = document.querySelectorAll('.provider-card, .service-card');
+    
+    recommendationCards.forEach((card, index) => {
+        // Track clicks on recommendations
+        card.addEventListener('click', function(e) {
+            if (!e.target.closest('button')) {
+                // Send interaction data to improve recommendations
+                fetch('/ml_engine/api/feedback/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        'action': 'clicked',
+                        'recommendation_index': index,
+                        'timestamp': new Date().toISOString()
+                    })
+                }).catch(err => console.log('Error tracking recommendation:', err));
+            }
+        });
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Details - Home Service Marketplace{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📋 Booking Details</h2>
+        <div>
+            <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-secondary">
+                ← Back to My Bookings
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Booking Information -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">📅 Booking Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Service Details</h6>
+                            <p><strong>{{ booking.service.title }}</strong></p>
+                            <p class="text-muted">{{ booking.service.category.name }}</p>
+                            <p>{{ booking.service.description|default:"No description available" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Schedule</h6>
+                            <p><strong>Date:</strong> {{ booking.booking_date|date:"l, F j, Y" }}</p>
+                            <p><strong>Time:</strong> {{ booking.booking_time }}</p>
+                            <p><strong>Duration:</strong> {{ booking.estimated_duration }} hour(s)</p>
+                            {% if booking.completed_at %}
+                                <p><strong>Completed:</strong> {{ booking.completed_at|date:"l, F j, Y" }} at {{ booking.completed_at|time }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Pricing</h6>
+                            <p><strong>Quoted Price:</strong> ${{ booking.quoted_price }}</p>
+                            {% if booking.final_price %}
+                                <p><strong>Final Price:</strong> ${{ booking.final_price }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Status</h6>
+                            <span class="badge badge-{% if booking.status == 'completed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'confirmed' %}info{% elif booking.status == 'cancelled' %}danger{% elif booking.status == 'in_progress' %}primary{% else %}secondary{% endif %}" style="font-size: 1rem; padding: 10px;">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {% if booking.special_instructions %}
+                        <hr>
+                        <h6>Special Instructions</h6>
+                        <p>{{ booking.special_instructions }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Provider Information -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">👤 Provider Information</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if booking.provider.profile_picture %}
+                        <img src="{{ booking.provider.profile_picture.url }}" 
+                             alt="{{ booking.provider.username }}" 
+                             class="rounded-circle mb-3" 
+                             style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mb-3" 
+                             style="width: 100px; height: 100px;">
+                            <span class="text-white" style="font-size: 2rem;">👤</span>
+                        </div>
+                    {% endif %}
+                    
+                    <h5>{{ booking.provider.get_full_name }}</h5>
+                    <p class="text-muted">@{{ booking.provider.username }}</p>
+                    
+                    <div class="mb-3">
+                        <span class="badge bg-warning text-dark" style="font-size: 0.9rem;">
+                            ⭐ {{ booking.provider.provider_profile.average_rating|default:"N/A" }}/5
+                        </span>
+                        <small class="text-muted d-block">({{ booking.provider.provider_profile.total_reviews }} reviews)</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Business:</strong><br>
+                        {{ booking.provider.provider_profile.business_name|default:"Not specified" }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Experience:</strong><br>
+                        {{ booking.provider.provider_profile.years_of_experience }} years
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Completed Jobs:</strong><br>
+                        {{ booking.provider.provider_profile.completed_jobs }}
+                    </div>
+                    
+                    {% if booking.provider.provider_profile.description %}
+                        <div class="mb-3">
+                            <strong>About:</strong><br>
+                            <small>{{ booking.provider.provider_profile.description|truncatewords:20 }}</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">📞 Contact</h5>
+                </div>
+                <div class="card-body">
+                    {% if booking.provider.phone_number %}
+                        <p><strong>Phone:</strong> {{ booking.provider.phone_number }}</p>
+                    {% endif %}
+                    
+                    {% if booking.provider.email %}
+                        <p><strong>Email:</strong> {{ booking.provider.email }}</p>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <a href="{% url 'services:provider_profile' booking.provider.id %}" 
+                           class="btn btn-outline-primary btn-sm w-100">
+                            View Full Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actions -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="mb-3">🔧 Actions</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    {% if booking.status in 'pending','confirmed' %}
+                        <form method="POST" action="{% url 'bookings:cancel' booking.id %}" 
+                              onsubmit="return confirm('Are you sure you want to cancel this booking?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger w-100">
+                                ❌ Cancel Booking
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-3">
+                    {% if booking.status in 'pending','confirmed' %}
+                        <button class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#rescheduleModal">
+                            📅 Reschedule
+                        </button>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-3">
+                    {% if booking.status == 'completed' %}
+                        {% if can_review %}
+                            <a href="{% url 'reviews:create' booking.id %}" class="btn btn-success w-100">
+                                ⭐ Write Review
+                            </a>
+                        {% else %}
+                            <button class="btn btn-outline-success w-100" disabled>
+                                ✅ Already Reviewed
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-3">
+                    <a href="{% url 'services:detail' booking.service.id %}" class="btn btn-outline-primary w-100">
+                        🔍 View Service
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reschedule Modal -->
+    {% if booking.status in 'pending','confirmed' %}
+    <div class="modal fade" id="rescheduleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📅 Reschedule Booking</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'bookings:reschedule' booking.id %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="new_date" class="form-label">New Date</label>
+                            <input type="date" 
+                                   name="new_date" 
+                                   id="new_date" 
+                                   class="form-control" 
+                                   min="{{ "now"|date:"Y-m-d" }}"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_time" class="form-label">New Time</label>
+                            <input type="time" 
+                                   name="new_time" 
+                                   id="new_time" 
+                                   class="form-control" 
+                                   required>
+                        </div>
+                        <div class="alert alert-info">
+                            <small>💡 The provider will need to confirm the new date and time.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Send Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.card-header {
+    font-weight: 600;
+}
+
+.badge-success { background-color: #28a745; }
+.badge-warning { background-color: #ffc107; color: #212529; }
+.badge-info { background-color: #17a2b8; }
+.badge-danger { background-color: #dc3545; }
+.badge-primary { background-color: #007bff; }
+.badge-secondary { background-color: #6c757d; }
+
+.rounded-circle {
+    border-radius: 50%;
+}
+
+.modal-content {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+}
+</style>
+{% endblock %}

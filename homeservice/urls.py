@@ -29,6 +29,8 @@ urlpatterns = [
     path('bookings/', include('bookings.urls')),
     path('reviews/', include('reviews.urls')),
     path('payments/', include('payments.urls')),
+    path('chatbot/', include('chatbot.urls')),
+    path('ml_engine/', include('ml_engine.urls')),
 ]
 
 # Serve media files in development

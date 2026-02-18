@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-immfjny#sp5=b2+z_u!mi7^4dve3-lt8jmm13xh(s_#pdn!(fe
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
+
+# OpenAI Configuration (optional - for enhanced AI features)
+OPENAI_API_KEY = None  # Set your OpenAI API key here for AI-powered responses
 
 
 # Application definition
@@ -45,6 +48,7 @@ INSTALLED_APPS = [
     'reviews',
     'payments',
     'ml_engine',
+    'chatbot',
 ]
 
 MIDDLEWARE = [

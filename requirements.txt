@@ -20,6 +20,11 @@ seaborn==0.13.0
 # Natural Language Processing
 nltk==3.8.1
 textblob==0.17.1
+openai==1.3.7
+transformers==4.35.2
+torch==2.1.1
+sentence-transformers==2.2.2
+spacy==3.7.2
 
 # Image Processing (for profile pictures)
 Pillow==10.1.0

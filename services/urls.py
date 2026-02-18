@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.service_list, name='list'),
     path('<int:service_id>/', views.service_detail, name='detail'),
     path('category/<str:category_name>/', views.category_services, name='category'),
+    path('recommendations/', views.recommendations_view, name='recommendations'),
     
     # Provider service management
     path('my-services/', views.my_services, name='my_services'),

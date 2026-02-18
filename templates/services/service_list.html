@@ -53,6 +53,70 @@
         </form>
     </div>
 
+    <!-- ML Recommendations Section -->
+    {% if recommendations and user.is_authenticated and user.role == 'customer' %}
+    <div class="card" style="margin-top: 20px;">
+        <div class="card-title">
+            <h3>🤖 Recommended Providers for You</h3>
+            <small style="color: #666;">Personalized recommendations based on your preferences and booking history</small>
+        </div>
+        <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+            {% for rec in recommendations %}
+            <div class="provider-card" style="border: 2px solid #007bff; background: #f8f9ff;">
+                <div style="padding: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <div>
+                            <h4 style="margin: 0; color: #007bff;">{{ rec.provider.username }}</h4>
+                            <p style="margin: 5px 0; color: #666; font-size: 14px;">{{ rec.provider_profile.business_name }}</p>
+                        </div>
+                        <div style="background: #007bff; color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px;">
+                            {{ rec.final_score|floatformat:2 }} Match
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 10px;">
+                        <div class="service-rating">
+                            <span class="star">★</span>
+                            <span>{{ rec.provider_profile.average_rating|default:0 }}/5</span>
+                            <small>({{ rec.provider_profile.total_reviews|default:0 }} reviews)</small>
+                        </div>
+                        <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                            {{ rec.provider_profile.years_of_experience }} years experience • 
+                            {{ rec.provider_profile.completed_jobs }} jobs completed
+                        </div>
+                    </div>
+                    
+                    {% if rec.services %}
+                    <div style="margin-bottom: 10px;">
+                        <strong style="font-size: 14px;">Services:</strong>
+                        <div style="font-size: 13px; color: #666;">
+                            {% for service in rec.services|slice:":3" %}
+                                {{ service.title }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                            {% if rec.services|length > 3 %}+{{ rec.services|length|add:"-3" }} more{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <a href="{% url 'services:detail' rec.services.0.id %}" class="btn btn-primary btn-sm">View Services</a>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="showRecommendationDetails({{ forloop.counter0 }})">Why?</button>
+                    </div>
+                    
+                    <div id="rec-details-{{ forloop.counter0 }}" style="display: none; margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px; font-size: 12px;">
+                        <strong>Recommendation Score Breakdown:</strong><br>
+                        • Compatibility: {{ rec.score_breakdown.content_based|floatformat:3 }}<br>
+                        • Collaborative: {{ rec.score_breakdown.collaborative|floatformat:3 }}<br>
+                        • Popularity: {{ rec.score_breakdown.popularity|floatformat:3 }}<br>
+                        • Availability: {{ rec.score_breakdown.availability|floatformat:3 }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     {% if page_obj %}
         <div class="card-grid">
             {% for service in page_obj %}
@@ -92,14 +156,27 @@
         {% if page_obj.has_other_pages %}
         <div style="text-align: center; margin-top: 20px;">
             {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&category={{ selected_category }}&min_price={{ min_price }}&max_price={{ max_price }}&sort={{ sort_by }}" class="btn btn-outline-primary">Previous</a>
+                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query|default:''|urlencode }}&category={{ selected_category|default:''|urlencode }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}&sort={{ sort_by|default:'created_at'|urlencode }}" class="btn btn-outline-primary">Previous</a>
             {% endif %}
             <span style="margin: 0 10px;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&category={{ selected_category }}&min_price={{ min_price }}&max_price={{ max_price }}&sort={{ sort_by }}" class="btn btn-outline-primary">Next</a>
+                <a href="?page={{ page_obj.next_page_number }}&search={{ search_query|default:''|urlencode }}&category={{ selected_category|default:''|urlencode }}&min_price={{ min_price|default:'' }}&max_price={{ max_price|default:'' }}&sort={{ sort_by|default:'created_at'|urlencode }}" class="btn btn-outline-primary">Next</a>
             {% endif %}
         </div>
         {% endif %}
     {% endif %}
 </div>
+</div>
+
+<script>
+function showRecommendationDetails(index) {
+    const details = document.getElementById(`rec-details-${index}`);
+    if (details.style.display === 'none') {
+        details.style.display = 'block';
+    } else {
+        details.style.display = 'none';
+    }
+}
+</script>
+
 {% endblock %}

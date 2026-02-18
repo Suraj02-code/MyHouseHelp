@@ -1,7 +1,12 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from .models import User, CustomerProfile, ServiceProviderProfile
+
+
+class TelInput(forms.TextInput):
+    input_type = 'tel'
 
 
 class UserRegistrationForm(UserCreationForm):
@@ -24,7 +29,17 @@ class UserRegistrationForm(UserCreationForm):
     phone_number = forms.CharField(
         max_length=15,
         required=True,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+1234567890'})
+        widget=TelInput(attrs={
+            'class': 'form-control',
+            'placeholder': '+1234567890',
+            'inputmode': 'tel',
+            'autocomplete': 'tel',
+            'required': 'required',
+            'pattern': '^\\+?1?\\d{9,10}$',
+            'title': 'Enter a valid phone number. Up to 10 digits, may start with +.',
+            'oninvalid': "this.setCustomValidity('Enter a valid phone number. Up to 10 digits, may start with +.')",
+            'oninput': "this.setCustomValidity('')"
+        })
     )
     address = forms.CharField(
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -45,18 +60,50 @@ class UserRegistrationForm(UserCreationForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['password1'].widget.attrs.update({'class': 'form-control'})
-        self.fields['password2'].widget.attrs.update({'class': 'form-control'})
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control',
+            'minlength': '8',
+            'required': 'required',
+            'autocomplete': 'new-password',
+            'pattern': '.{8,}',
+            'title': 'Password must be at least 8 characters long.',
+            'oninvalid': "this.setCustomValidity('Password must be at least 8 characters long.')",
+            'oninput': "this.setCustomValidity(''); var c=document.getElementById('id_password2'); if(c){c.dispatchEvent(new Event('input'));}"
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control',
+            'minlength': '8',
+            'required': 'required',
+            'autocomplete': 'new-password',
+            'pattern': '.{8,}',
+            'title': 'Passwords must match and be at least 8 characters.',
+            'oninvalid': "this.setCustomValidity('Passwords must match and be at least 8 characters.')",
+            'oninput': "this.setCustomValidity(this.value !== document.getElementById('id_password1').value ? 'Passwords do not match.' : '')"
+        })
         
         # Add help text
         self.fields['username'].help_text = 'Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'
         self.fields['password1'].help_text = 'Your password must contain at least 8 characters.'
+        
+        # Add invalid styling for fields with errors when form is bound
+        if self.is_bound:
+            for name, field in self.fields.items():
+                if self[name].errors:
+                    existing = field.widget.attrs.get('class', '')
+                    field.widget.attrs['class'] = (existing + ' is-invalid').strip()
         
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
             raise ValidationError("A user with this email already exists.")
         return email
+    
+    def clean_phone_number(self):
+        phone = (self.cleaned_data.get('phone_number') or '').strip()
+        # E.164-like pattern: optional +, optional leading 1, 9-10 digits total
+        validator = RegexValidator(r'^\+?1?\d{9,10}$', message='Enter a valid phone number. Up to 10 digits, may start with +.')
+        validator(phone)
+        return phone
     
     def save(self, commit=True):
         user = super().save(commit=False)

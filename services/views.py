@@ -11,6 +11,9 @@ from .forms import ServiceForm, ServiceAvailabilityForm
 from reviews.models import Review
 from bookings.models import Booking
 
+# Import ML recommendation engine
+from ml_engine.recommendation_engine import recommendation_engine, service_recommendation_engine
+
 
 def service_list(request):
     """Service listing with search and filtering"""
@@ -71,6 +74,27 @@ def service_list(request):
     # Get categories for filter dropdown
     categories = ServiceCategory.objects.filter(is_active=True)
     
+    # Get ML recommendations for logged-in customers
+    recommendations = []
+    service_recommendations = []
+    if request.user.is_authenticated and request.user.role == 'customer':
+        try:
+            # Get provider recommendations
+            recommendations = recommendation_engine.get_provider_recommendations(
+                customer=request.user,
+                service_category=category,
+                max_recommendations=3
+            )
+            
+            # Get service recommendations
+            service_recommendations = service_recommendation_engine.get_service_recommendations(
+                customer=request.user,
+                max_recommendations=4
+            )
+        except Exception as e:
+            # Log error but don't break the view
+            print(f"Error getting recommendations: {e}")
+    
     context = {
         'page_obj': page_obj,
         'categories': categories,
@@ -79,6 +103,8 @@ def service_list(request):
         'min_price': min_price,
         'max_price': max_price,
         'sort_by': sort_by,
+        'recommendations': recommendations,
+        'service_recommendations': service_recommendations,
     }
     
     return render(request, 'services/service_list.html', context)
@@ -288,3 +314,40 @@ def search_api(request):
         })
     
     return JsonResponse({'results': results})
+
+
+@login_required
+def recommendations_view(request):
+    """Dedicated recommendations page"""
+    if request.user.role != 'customer':
+        messages.error(request, 'Access denied. Customer account required.')
+        return redirect('home')
+    
+    try:
+        # Get provider recommendations
+        recommendations = recommendation_engine.get_provider_recommendations(
+            customer=request.user,
+            max_recommendations=12
+        )
+        
+        # Get service recommendations
+        service_recommendations = service_recommendation_engine.get_service_recommendations(
+            customer=request.user,
+            max_recommendations=8
+        )
+        
+        # Get categories for filtering
+        categories = ServiceCategory.objects.filter(is_active=True)
+        
+        context = {
+            'recommendations': recommendations,
+            'service_recommendations': service_recommendations,
+            'categories': categories,
+            'page_title': 'Personalized Recommendations'
+        }
+        
+        return render(request, 'services/recommendations.html', context)
+        
+    except Exception as e:
+        messages.error(request, 'Unable to load recommendations. Please try again later.')
+        return redirect('services:service_list')
