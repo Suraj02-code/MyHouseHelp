@@ -100,13 +100,14 @@
                     
                     <div style="display: flex; gap: 10px;">
                         <a href="{% url 'services:detail' rec.services.0.id %}" class="btn btn-primary btn-sm">View Services</a>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="showRecommendationDetails({{ forloop.counter0 }})">Why?</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="showRecommendationDetails('{{ forloop.counter0 }}')">Why?</button>
                     </div>
                     
                     <div id="rec-details-{{ forloop.counter0 }}" style="display: none; margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px; font-size: 12px;">
                         <strong>Recommendation Score Breakdown:</strong><br>
+                        • Rating: {{ rec.score_breakdown.rating|floatformat:3 }}<br>
+                        • Similar Users: {{ rec.score_breakdown.collaborative|floatformat:3 }}<br>
                         • Compatibility: {{ rec.score_breakdown.content_based|floatformat:3 }}<br>
-                        • Collaborative: {{ rec.score_breakdown.collaborative|floatformat:3 }}<br>
                         • Popularity: {{ rec.score_breakdown.popularity|floatformat:3 }}<br>
                         • Availability: {{ rec.score_breakdown.availability|floatformat:3 }}
                     </div>
